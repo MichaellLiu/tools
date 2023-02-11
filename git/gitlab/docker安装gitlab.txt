@@ -1,0 +1,50 @@
+docker run 
+-d                #后台运行，全称：detach
+-p 8443:443      #将容器内部端口向外映射
+-p 8090:80       #将容器内80端口映射至宿主机8090端口，这是访问gitlab的端口
+-p 8022:22       #将容器内22端口映射至宿主机8022端口，这是访问ssh的端口
+--restart always #容器自启动
+--name gitlab    #设置容器名称为gitlab
+-v /usr/local/gitlab/etc:/etc/gitlab    #将容器/etc/gitlab目录挂载到宿主机/usr/local/gitlab/etc目录下，若宿主机内此目录不存在将会自动创建
+-v /usr/local/gitlab/log:/var/log/gitlab    #与上面一样
+-v /usr/local/gitlab/data:/var/opt/gitlab   #与上面一样
+--privileged=true         #让容器获取宿主机root权限
+gitlab/gitlab-ce-zh    #镜像的名称，这里也可以写镜像ID
+
+1.docker pull gitlab/gitlab-ce:latest
+2.挂载目录
+mkdir -p /home/gitlab/etc/gitlab	
+mkdir -p /home/gitlab/var/log
+mkdir -p /home/gitlab/var/opt
+3.启动
+docker run -d -p 8443:443 -p 8090:80 -p 8022:22 --restart always --name gitlab -v /usr/local/gitlab/etc:/etc/gitlab -v /usr/local/gitlab/log:/var/log/gitlab -v /usr/local/gitlab/data:/var/opt/gitlab --privileged=true gitlab/gitlab-ce-zh
+# 进入容器内部
+docker exec -it gitlab /bin/bash
+
+# 进入控制台
+gitlab-rails console -e production
+
+# 查询id为1的用户，id为1的用户是超级管理员
+user = User.where(id:1).first
+# 修改密码为123456
+user.password='123456'
+user.password_confirmation=‘123456789’ #确认密码
+# 保存
+user.save!
+# 退出
+exit;
+
+映射8022端口
+进入容器：
+vi /etc/gitlab/gitlab.rb
+修改
+
+external_url 'http://192.168.199.231"8090'
+gitlab_rails['gitlab_ssh_host']='192.168.10.3'
+gitlab_rails['gitlab_shell_ssh_port']='2222'
+
+重启容器：gitlab-ctl reconfigure
+退出容器
+
+https://to.runba.cyou/link/LpJsGsl4febfVUs0?sub=3
+
